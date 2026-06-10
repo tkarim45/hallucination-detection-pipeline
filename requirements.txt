@@ -1,0 +1,6 @@
+deepeval
+datasets
+openai
+pandas
+matplotlib
+python-dotenv
