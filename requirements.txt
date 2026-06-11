@@ -1,6 +1,8 @@
 deepeval
 datasets
-openai
+anthropic[bedrock]
+boto3>=1.34
+aiobotocore
 pandas
 matplotlib
 python-dotenv
