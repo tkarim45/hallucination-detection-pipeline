@@ -1,15 +1,15 @@
 # Hallucination Detection Pipeline
 
-**Measuring where LLMs confidently get it wrong — per topic, per model, with numbers.**
+**Measuring where LLMs confidently get it wrong: per topic, per model, with numbers.**
 
 An end-to-end evaluation pipeline that runs two Claude models (via AWS Bedrock) over the
 [TruthfulQA](https://huggingface.co/datasets/truthful_qa) benchmark (817 adversarial
-questions, 38 topic categories), scores every answer as hallucinated / not hallucinated,
-and breaks failure rates down by topic category — so the output isn't "the model
-hallucinates sometimes" but *"Model X hallucinates on N% of health/legal questions vs
-M% on factual trivia, and Model Y cuts that by Z points."*
+questions, 38 topic categories), scores every answer as hallucinated or not, and breaks
+failure rates down by topic category. The output isn't "the model hallucinates
+sometimes" but *"Model X hallucinates on N% of health/legal questions vs M% on factual
+trivia, and Model Y cuts that by Z points."*
 
-> 🚧 **Full 817-question run in progress** — headline numbers, per-category charts, and
+> 🚧 **Full 817-question run in progress.** Headline numbers, per-category charts, and
 > the model-vs-model delta land here when it completes. Pilot run (20 questions) is
 > fully wired end-to-end.
 
@@ -17,10 +17,10 @@ M% on factual trivia, and Model Y cuts that by Z points."*
 
 Hallucination is the most-cited failure mode of deployed LLMs, and it is **not random**:
 models fail far more on misconception-prone domains (health, law, conspiracies) than on
-plain trivia. Knowing *where* a model fails is the first step to fixing it — better
-prompts, guardrails, retrieval. Every major lab runs exactly this kind of benchmark
-before a model release; this repo is a from-scratch, reproducible version of that
-workflow.
+plain trivia. Knowing *where* a model fails is the first step to fixing it through
+better prompts, guardrails, or retrieval. Every major lab runs exactly this kind of
+benchmark before a model release; this repo is a from-scratch, reproducible version of
+that workflow.
 
 ## How it works
 
@@ -40,7 +40,7 @@ TruthfulQA (HuggingFace)
 │  • MC mode: exact-match letter scoring (no judge)       │
 │  • Free-form: DeepEval HallucinationMetric,             │
 │    judge = Claude Opus 4.6 (stronger than both          │
-│    candidates → less judge bias)                        │
+│    candidates, so less judge bias)                      │
 └───────────────────────────┬─────────────────────────────┘
                             │ per-question scores
                             ▼
@@ -54,8 +54,8 @@ TruthfulQA (HuggingFace)
 
 | Mode | What it measures | Scoring |
 |---|---|---|
-| `mc` | Can the model pick the true statement among misconceptions? | Exact-match — cheap, unambiguous, no judge error |
-| `free` | Does the model hallucinate when answering naturally? | LLM-as-judge (DeepEval) vs reference answers — realistic but judge-dependent |
+| `mc` | Can the model pick the true statement among misconceptions? | Exact-match: cheap, unambiguous, no judge error |
+| `free` | Does the model hallucinate when answering naturally? | LLM-as-judge (DeepEval) vs reference answers: realistic but judge-dependent |
 
 The gap between the two modes is itself a finding.
 
@@ -64,15 +64,15 @@ The gap between the two modes is itself a finding.
 - **Generation separated from evaluation.** Generation costs money; every raw response
   is cached to disk keyed by `(model, question_id)` **after each call**, so an
   interrupted run (throttle storm, network, Ctrl-C) resumes with zero re-spend.
-  Scoring and analysis are derived artifacts — re-runnable for free, forever.
+  Scoring and analysis are derived artifacts, re-runnable for free, forever.
 - **Deterministic runs.** `temperature=0`, pinned Bedrock model IDs, raw outputs frozen
   before scoring.
 - **Throttle-resilient.** Fresh AWS accounts get tight Bedrock quotas; the pipeline
   survives sustained 429 storms with exponential backoff up to 2-minute waits instead
   of dying mid-run.
-- **Judge ≠ candidate.** The DeepEval judge (Opus 4.6) is a strictly stronger model
-  than both candidates, and MC mode provides a judge-free baseline to sanity-check
-  judge verdicts against.
+- **Judge is not a candidate.** The DeepEval judge (Opus 4.6) is a strictly stronger
+  model than both candidates, and MC mode provides a judge-free baseline to
+  sanity-check judge verdicts against.
 
 ## Cost
 
@@ -84,7 +84,7 @@ Full 817-question run, both models, both modes, measured from actual token usage
 | LLM-judge scoring (2 × 817 free-form answers, Opus 4.6) | ~$17 |
 | **Total** | **~$19** |
 
-Throttled/retried requests are never billed; wall-clock time is quota-bound, not
+Throttled and retried requests are never billed; wall-clock time is quota-bound, not
 cost-bound.
 
 ## Quickstart
@@ -105,7 +105,7 @@ python src/analyze.py
 python src/report.py        # → reports/report.md + charts
 ```
 
-Models are Bedrock inference-profile IDs (`global.` endpoints — best availability, no
+Models are Bedrock inference-profile IDs (`global.` endpoints: best availability, no
 regional premium), overridable in `.env`.
 
 ## Project structure
@@ -127,7 +127,7 @@ reports/              # final report + figures (committed)
 *(Full-run numbers, per-bucket charts, model deltas, and a hand-audit of 15+ judge
 verdicts land here once the 817-question run completes.)*
 
-Pilot (first 20 questions) — pipeline validation only, not statistically meaningful:
+Pilot (first 20 questions), pipeline validation only, not statistically meaningful:
 
 | Model | MC hallucination rate | Free-form hallucination rate |
 |---|---|---|
@@ -138,13 +138,13 @@ Pilot (first 20 questions) — pipeline validation only, not statistically meani
 
 - [x] Full pipeline: load → generate → score → analyze → report
 - [ ] Full 817-question run, both models, both modes *(in progress)*
-- [ ] Hand-verification of 15–20 judge verdicts with noted disagreements
+- [ ] Hand-verification of 15-20 judge verdicts with noted disagreements
 - [ ] Guardrail experiment: "answer only if certain" system prompt on the worst
-      category bucket — before/after delta
+      category bucket, with before/after delta
 - [ ] mc2 + generation config comparison
 
 ## References
 
-- Lin et al., 2021 — *TruthfulQA: Measuring How Models Mimic Human Falsehoods*
-- [DeepEval](https://github.com/confident-ai/deepeval) — `HallucinationMetric`
+- Lin et al., 2021, *TruthfulQA: Measuring How Models Mimic Human Falsehoods*
+- [DeepEval](https://github.com/confident-ai/deepeval): `HallucinationMetric`
 - [Claude on Amazon Bedrock](https://platform.claude.com/docs/en/build-with-claude/claude-on-amazon-bedrock)
