@@ -38,10 +38,12 @@ def mc_prompt(row: dict) -> str:
     return f"{row['question']}\n\n{options}\n\nAnswer:"
 
 
-def call_with_retry(client, *, max_retries: int = 5, **kwargs):
+def call_with_retry(client, *, max_retries: int = 12, **kwargs):
     import anthropic
 
-    delay = 2.0
+    # Bedrock quotas are per-minute windows: a throttle storm needs waits well
+    # past 60s, so back off patiently rather than failing the whole run.
+    delay = 5.0
     for attempt in range(max_retries):
         try:
             return client.messages.create(**kwargs)
@@ -50,7 +52,7 @@ def call_with_retry(client, *, max_retries: int = 5, **kwargs):
                 raise
             print(f"  retry {attempt + 1}/{max_retries} after {delay:.0f}s ({type(e).__name__})")
             time.sleep(delay)
-            delay = min(delay * 2, 60)
+            delay = min(delay * 2, 120)
 
 
 def run(model_key: str, mode: str, limit: int | None) -> None:
