@@ -47,7 +47,11 @@ def call_with_retry(client, *, max_retries: int = 12, **kwargs):
     for attempt in range(max_retries):
         try:
             return client.messages.create(**kwargs)
-        except (anthropic.RateLimitError, anthropic.InternalServerError) as e:
+        except (
+            anthropic.RateLimitError,
+            anthropic.InternalServerError,
+            anthropic.APIConnectionError,  # includes timeouts; survives network blips
+        ) as e:
             if attempt == max_retries - 1:
                 raise
             print(f"  retry {attempt + 1}/{max_retries} after {delay:.0f}s ({type(e).__name__})")
