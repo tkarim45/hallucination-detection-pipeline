@@ -76,7 +76,7 @@ The gap between the two modes is itself a finding.
 
 ## Cost
 
-Full 817-question run, both models, both modes, measured from actual token usage:
+Full 817-question run, both models, both modes, projected from measured per-question token usage (the full run has not completed yet):
 
 | Item | Cost |
 |---|---|
